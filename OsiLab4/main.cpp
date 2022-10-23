@@ -13,6 +13,8 @@ map<string, int> frameTypesUses = { {"LLC", 0}, {"RAW", 0}, {"DIX", 0}, {"SNAP",
 // Мэп, где храним основные 3 вида дейтаграмм, лежащих внутри фреймов
 map<string, int> dataTypesUses = { {"IP", 0}, {"ARP",0}, {"RARP", 0} };
 
+size_t framesCount = 0;
+
 class MacAddress {
 public:
    uint8_t address[6] = { 0 };
@@ -41,12 +43,14 @@ public:
 
    string ToString() const noexcept {
       stringstream s;
-      s << hex << toupper;
+      s.unsetf(ios::dec);
+      s.setf(ios::hex | ios::uppercase);
       for (int i = 0; i < 5; i++)
       {
-         s << address[i] << " : ";
+         // Поскольку метод вывода воспринимает uint8_t как uchar, то он их выводит не в 16-ричном виде
+         s << setw(2) << setfill('0') << static_cast<int>(address[i]) << " : ";
       }
-      s << address[5];
+      s << setw(2) << setfill('0') << static_cast<int>(address[5]);
       return s.str();
    }
 
@@ -88,12 +92,11 @@ public:
 
    string ToString() const noexcept {
       stringstream s;
-      s << hex << toupper;
       for (int i = 0; i < 3; i++)
       {
-         s << address[i] << ".";
+         s << static_cast<int>(address[i]) << ".";
       }
-      s << address[3];
+      s << static_cast<int>(address[3]);
       return s.str();
    }
 
@@ -114,7 +117,7 @@ uint16_t IpDataGet(vector<uint8_t>& data, size_t begin, IpAddress& dest, IpAddre
    return (static_cast<uint16_t>(data[begin + 2]) << 8) + data[begin + 3];
 }
 
-uint16_t ArpDataGet(vector<uint8_t>& data, size_t begin, IpAddress& dest, IpAddress& source, MacAddress& destMac, MacAddress& sourceMac) {
+uint16_t ArpDataGet(vector<uint8_t>& data, size_t begin, IpAddress& dest, IpAddress& source, MacAddress& sourceMac, MacAddress& destMac) {
    uint8_t hardwareLen = data[begin + 4];
    uint8_t protocolLen = data[begin + 5];
    if (protocolLen == 4)
@@ -135,10 +138,9 @@ uint16_t ArpDataGet(vector<uint8_t>& data, size_t begin, IpAddress& dest, IpAddr
 
 void FrameParser(vector<uint8_t>& data) {
    size_t dataPtr = 0;
-   size_t framesCount = 0;
    while (dataPtr < data.size())
    {
-      cout << endl << " **************************************" << endl;
+      cout << endl << " **************************************" << endl << endl;
 
       framesCount++;
       cout << "Фрейм #" << framesCount << ": " << endl;
@@ -318,15 +320,22 @@ int main() {
    inpFile.seekg(0);
 
    // Вектор байтов из файла
-   vector<uint8_t> data(inpFileSize);
-   // Читаем массив из файла
-   for (size_t i = 0; i < inpFileSize; i++)
-   {
-      inpFile >> data[i];
-   }
+   vector<uint8_t> data(istreambuf_iterator<char>(inpFile), {});
    inpFile.close();
 
    FrameParser(data);
 
+   cout << endl << " **************************************" << endl << endl;
+   cout << "Статистика: " << endl;
+   cout << "Всего фреймов: " << framesCount << ", из них: " << endl;
+   cout << " - Ethernet II (DIX): " << frameTypesUses["DIX"] << endl;
+   cout << " - Raw 802.3 (Novell): " << frameTypesUses["RAW"] << endl;
+   cout << " - Ethernet 802.3 (with SNAP): " << frameTypesUses["SNAP"] << endl;
+   cout << " - Ethernet 802.3 (LLC): " << frameTypesUses["LLC"] << endl << endl;
+
+   cout << "При этом протоколы данных использовались следующим образом: " << endl;
+   cout << " - IP-дейтаграммы: " << dataTypesUses["IP"] << endl;
+   cout << " - ARP-дейтаграммы: " << dataTypesUses["ARP"] << endl;
+   cout << " - RARP-дейтаграммы: " << dataTypesUses["RARP"] << endl << endl;
    return 0;
 }

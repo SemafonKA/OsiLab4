@@ -20,13 +20,13 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\ethers04.bin">
+    <None Include="ethers04.bin">
       <Filter>Файлы ресурсов</Filter>
     </None>
-    <None Include="..\ethers06.bin">
+    <None Include="ethers06.bin">
       <Filter>Файлы ресурсов</Filter>
     </None>
-    <None Include="..\ethers07.bin">
+    <None Include="ethers07.bin">
       <Filter>Файлы ресурсов</Filter>
     </None>
   </ItemGroup>
