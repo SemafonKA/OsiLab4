@@ -111,22 +111,22 @@ public:
 };
 
 uint16_t IpDataGet(vector<uint8_t>& data, size_t begin, IpAddress& dest, IpAddress& source) {
-   dest = IpAddress::Parse(data, begin + 12);
-   source = IpAddress::Parse(data, begin + 16);
+   source = IpAddress::Parse(data, begin + 12);
+   dest = IpAddress::Parse(data, begin + 16);
 
    return (static_cast<uint16_t>(data[begin + 2]) << 8) + data[begin + 3];
 }
 
-uint16_t ArpDataGet(vector<uint8_t>& data, size_t begin, IpAddress& dest, IpAddress& source, MacAddress& sourceMac, MacAddress& destMac) {
+uint16_t ArpDataGet(vector<uint8_t>& data, size_t begin, IpAddress& dest, IpAddress& source, MacAddress& destMac, MacAddress& sourceMac) {
    uint8_t hardwareLen = data[begin + 4];
    uint8_t protocolLen = data[begin + 5];
    if (protocolLen == 4)
    {
-      destMac = MacAddress::Parse(data, begin + 8);
-      dest = IpAddress::Parse(data, begin + 8 + hardwareLen);
+      sourceMac = MacAddress::Parse(data, begin + 8);
+      source = IpAddress::Parse(data, begin + 8 + hardwareLen);
 
-      sourceMac = MacAddress::Parse(data, begin + 8 + hardwareLen + protocolLen);
-      source = IpAddress::Parse(data, begin + 8 + 2 * hardwareLen + protocolLen);
+      destMac = MacAddress::Parse(data, begin + 8 + hardwareLen + protocolLen);
+      dest = IpAddress::Parse(data, begin + 8 + 2 * hardwareLen + protocolLen);
 
       return 2 * hardwareLen + 2 * protocolLen + 8;
    }
@@ -191,7 +191,7 @@ void FrameParser(vector<uint8_t>& data) {
 
             cout << "  MAC-адрес приёмника по ARP: " << destMac.ToString() << endl;
             cout << "  IP адрес приёмника: " << destIp.ToString() << endl;
-            cout << "  MAC-адрес источника по ARP: " << sourceAddr.ToString() << endl;
+            cout << "  MAC-адрес источника по ARP: " << sourceMac.ToString() << endl;
             cout << "  IP адрес источника: " << sourceIp.ToString() << endl;
             cout << "  Длина фрейма: " << LT << endl;
          }
